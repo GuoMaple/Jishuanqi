@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>购房费用计算器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', 'SimHei', sans-serif;
+            background-color: #f5f7fa;
+            padding: 8px;
+            line-height: 1.4;
+            width: 100%;
+            min-width: 320px;
+        }
+        .container {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            width: 100%;
+        }
+        .card-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #e8eaed;
+            display: flex;
+            align-items: center;
+        }
+        .card-title::before {
+            content: '';
+            width: 4px;
+            height: 14px;
+            background-color: #409eff;
+            margin-right: 8px;
+            border-radius: 2px;
+        }
+        .switch-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 13px;
+            color: #666;
+        }
+        .switch-btn {
+            display: flex;
+            margin-left: 8px;
+            background-color: #f5f7fa;
+            border-radius: 4px;
+            padding: 2px;
+        }
+        .switch-btn button {
+            padding: 4px 12px;
+            border: none;
+            border-radius: 3px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: transparent;
+            color: #666;
+        }
+        .switch-btn button.active {
+            background-color: #409eff;
+            color: white;
+        }
+        .switch-btn button:last-child.active {
+            background-color: #9b59b6;
+            color: white;
+        }
+        .form-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .form-row-horizontal {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        .form-item {
+            width: 100%;
+        }
+        .form-item-horizontal {
+            flex: 1;
+            min-width: 0;
+        }
+        .form-item-horizontal label {
+            display: block;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 3px;
+        }
+        .form-item-horizontal input {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #dcdfe6;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: border-color 0.3s;
+        }
+        .form-item label {
+            display: block;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .form-item input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #dcdfe6;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        .form-item input:focus {
+            outline: none;
+            border-color: #409eff;
+        }
+        .form-item .input-group {
+            display: flex;
+            align-items: center;
+        }
+        .form-item .input-group input {
+            flex: 1;
+            border-radius: 4px 0 0 4px;
+        }
+        .form-item .input-group .unit {
+            padding: 8px 12px;
+            background-color: #f5f7fa;
+            border: 1px solid #dcdfe6;
+            border-left: none;
+            border-radius: 0 4px 4px 0;
+            font-size: 13px;
+            color: #666;
+        }
+        .form-item-horizontal .input-group .unit {
+            padding: 6px 8px;
+            background-color: #f5f7fa;
+            border: 1px solid #dcdfe6;
+            border-left: none;
+            border-radius: 0 4px 4px 0;
+            font-size: 12px;
+            color: #666;
+        }
+        .calc-result {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            color: white;
+        }
+        .result-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 14px;
+        }
+        .result-row:last-child {
+            border-bottom: none;
+        }
+        .result-label {
+            opacity: 0.9;
+        }
+        .result-value {
+            font-weight: bold;
+        }
+        .monthly-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        .monthly-table th, .monthly-table td {
+            border: 1px solid #e8eaed;
+            padding: 6px 8px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .monthly-table th {
+            background-color: #f5f7fa;
+            font-weight: bold;
+            color: #666;
+        }
+        .monthly-table tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+        .monthly-table td:first-child, .monthly-table th:first-child {
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏠 购房费用计算器</h1>
+
+        <div class="card">
+            <div class="card-title">房屋基础信息</div>
+            <div class="switch-group">
+                <span>房屋类型：</span>
+                <div class="switch-btn" id="houseTypeSwitch">
+                    <button id="newHouseBtn" class="active">新房</button>
+                    <button id="secondHouseBtn">二手房</button>
+                </div>
+            </div>
+            <div class="form-row-horizontal">
+                <div class="form-item-horizontal">
+                    <label>房屋总价（万元）</label>
+                    <div class="input-group">
+                        <input type="number" id="houseTotalPrice" value="180" min="0" step="1">
+                    </div>
+                </div>
+                <div class="form-item-horizontal">
+                    <label>房屋面积（㎡）</label>
+                    <div class="input-group">
+                        <input type="number" id="houseArea" value="96" min="0" step="1">
+                    </div>
+                </div>
+                <div class="form-item-horizontal">
+                    <label>房屋单价（元/㎡）</label>
+                    <div class="input-group">
+                        <input type="number" id="houseUnitPrice" value="20000" min="0" step="100">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="card-title">贷款内容设置</div>
+                <div style="font-size: 13px; color: #409eff; font-weight: bold;">需贷款：¥<span id="requiredLoanAmount">110.00</span>万</div>
+            </div>
+            <div class="switch-group">
+                <span>还款方式：</span>
+                <div class="switch-btn" id="repaymentTypeSwitch">
+                    <button id="equalPrincipalBtn">等额本金</button>
+                    <button id="equalInstallmentBtn" class="active">等额本息</button>
+                </div>
+                <span id="repaymentDiff" style="margin-left: 12px; font-size: 12px; color: #666;"></span>
+            </div>
+            <div class="form-row-horizontal">
+                <div class="form-item-horizontal">
+                    <label>首付比例</label>
+                    <div class="input-group">
+                        <input type="number" id="downPaymentRatio" value="40" min="0" max="100" step="1">
+                    </div>
+                </div>
+                <div class="form-item-horizontal">
+                    <label>首付金额（万元）</label>
+                    <div class="input-group">
+                        <input type="number" id="downPaymentAmount" value="60" min="0" step="1">
+                    </div>
+                </div>
+                <div class="form-item-horizontal">
+                    <label>贷款年限（年）</label>
+                    <div class="input-group">
+                        <input type="number" id="loanYears" value="30" min="1" max="30" step="1">
+                    </div>
+                </div>
+            </div>
+            <div class="form-row-horizontal">
+                <div class="form-item-horizontal">
+                    <label>公积金贷款利率</label>
+                    <div class="input-group">
+                        <input type="number" id="fundRate" value="2.6" min="0" step="0.01">
+                    </div>
+                </div>
+                <div class="form-item-horizontal">
+                    <label>商业贷款利率</label>
+                    <div class="input-group">
+                        <input type="number" id="commercialRate" value="3.5" min="0" step="0.01">
+                    </div>
+                </div>
+                <div class="form-item-horizontal">
+                    <label>总利息（万元）</label>
+                    <div style="padding: 6px 8px; border-radius: 4px; font-size: 12px; color: #333;">
+                        ¥<span id="totalInterest">0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row-horizontal">
+                <div class="form-item-horizontal">
+                    <label>公积金贷款金额（万元）</label>
+                    <div class="input-group">
+                        <input type="number" id="fundLoanAmount" value="96" min="0" step="1">
+                    </div>
+                </div>
+                <div class="form-item-horizontal">
+                    <label>商业贷款金额（万元）</label>
+                    <div class="input-group">
+                        <input type="number" id="commercialLoanInput" value="90" min="0" step="1" readonly>
+                    </div>
+                </div>
+                <div class="form-item-horizontal">
+                    <label>利息差额（万元）</label>
+                    <div style="padding: 6px 8px; border-radius: 4px; font-size: 12px; color: #333;">
+                        ¥<span id="interestDiff">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" id="newHouseFees" style="display: block;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="card-title">新房额外费用</div>
+                <div style="font-size: 13px; color: #409eff; font-weight: bold;">费用小计：¥<span id="newHouseTotalFee">8</span>万</div>
+            </div>
+            <div class="form-row-horizontal">
+                <div class="form-item-horizontal">
+                    <label>装修及其它杂费（万元）</label>
+                    <div class="input-group">
+                        <input type="number" id="newHouseMisc" value="6" min="0" step="0.1">
+                    </div>
+                </div>
+                <div class="form-item-horizontal">
+                    <label>契税税率</label>
+                    <div style="padding: 6px 8px; background-color: #f5f7fa; border-radius: 4px; font-size: 12px; color: #333;">
+                        <span id="deedTaxRate">1</span>%
+                    </div>
+                </div>
+                <div class="form-item-horizontal">
+                    <label>契税金额（万元）</label>
+                    <div style="padding: 6px 8px; background-color: #f5f7fa; border-radius: 4px; font-size: 12px; color: #333;">
+                        ¥<span id="deedTaxAmount">2</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" id="secondHouseFees" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="card-title">二手房额外费用</div>
+                <div style="font-size: 13px; color: #409eff; font-weight: bold;">费用小计：¥<span id="secondHouseTotalFee">10</span>万</div>
+            </div>
+            <div class="form-row-horizontal">
+                <div class="form-item-horizontal">
+                    <label>个税税率</label>
+                    <div style="padding: 6px 8px; background-color: #f5f7fa; border-radius: 4px; font-size: 12px; color: #333;">
+                        <span id="incomeTaxRate">1</span>%
+                    </div>
+                </div>
+                <div class="form-item-horizontal">
+                    <label>中介费费率（%）</label>
+                    <div class="input-group">
+                        <input type="number" id="agencyFeeRate" value="1.05" min="0" step="0.01">
+                    </div>
+                </div>
+                <div class="form-item-horizontal">
+                    <label>评估费费率（%）</label>
+                    <div class="input-group">
+                        <input type="number" id="valuationFeeRate" value="0.5" min="0" step="0.01">
+                    </div>
+                </div>
+                <div class="form-item-horizontal">
+                    <label>杂项费（元）</label>
+                    <div class="input-group">
+                        <input type="number" id="miscellaneousFee" value="500" min="0" step="100">
+                    </div>
+                </div>
+            </div>
+            <div class="form-row-horizontal">
+                <div class="form-item-horizontal">
+                    <label>个税金额（万元）</label>
+                    <div style="padding: 6px 8px; background-color: #f5f7fa; border-radius: 4px; font-size: 12px; color: #333;">
+                        ¥<span id="incomeTaxAmount">2</span>
+                    </div>
+                </div>
+                <div class="form-item-horizontal">
+                    <label>中介费（万元）</label>
+                    <div style="padding: 6px 8px; background-color: #f5f7fa; border-radius: 4px; font-size: 12px; color: #333;">
+                        ¥<span id="agencyFee">2</span>
+                    </div>
+                </div>
+                <div class="form-item-horizontal">
+                    <label>评估费（万元）</label>
+                    <div style="padding: 6px 8px; background-color: #f5f7fa; border-radius: 4px; font-size: 12px; color: #333;">
+                        ¥<span id="valuationFeeAmount">1</span>
+                    </div>
+                </div>
+                <div class="form-item-horizontal">
+                    <label>装修费用（万元）</label>
+                    <div class="input-group">
+                        <input type="number" id="renovationFee" value="3" min="0" step="0.1">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">支付费用组成</div>
+            <div class="form-row-horizontal">
+                <div class="form-item-horizontal">
+                    <label>公积金存款（元）</label>
+                    <div class="input-group">
+                        <input type="number" id="fundDeposit" value="122000" min="0" step="100">
+                    </div>
+                </div>
+                <div class="form-item-horizontal">
+                    <label>一次性支出费用（元）</label>
+                    <div style="padding: 6px 8px; background-color: #f5f7fa; border-radius: 4px; font-size: 12px; color: #333;">
+                        ¥<span id="oneTimeExpense">650000</span>
+                    </div>
+                </div>
+                <div class="form-item-horizontal">
+                    <label>还需支付现金</label>
+                    <div style="padding: 6px 8px; background-color: #f5f7fa; border-radius: 4px; font-size: 12px; color: #333;">
+                        ¥<span id="cashPayment">550000</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">其它金额数据</div>
+            <div class="form-row-horizontal">
+                <div class="form-item-horizontal">
+                    <label>每月可用公积金（元）</label>
+                    <div class="input-group">
+                        <input type="number" id="personalFund" value="1656" min="0" step="1">
+                    </div>
+                </div>
+                <div class="form-item-horizontal">
+                    <label>当前月房租（元）</label>
+                    <div class="input-group">
+                        <input type="number" id="monthlyRent" value="2800" min="0" step="100">
+                    </div>
+                </div>
+                <div class="form-item-horizontal">
+                    <label>公积金+房租合计（元）</label>
+                    <div style="padding: 6px 8px; background-color: #f5f7fa; border-radius: 4px; font-size: 12px; color: #333;">
+                        ¥<span id="fundPlusRent">4456</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="calc-result">
+            <div class="result-title">📊 主要数据汇总</div>
+            <div class="result-row">
+                <span class="result-label">房屋总价</span>
+                <span class="result-value">¥<span id="summaryHouseTotal">190</span> 万元</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">首付比例</span>
+                <span class="result-value"><span id="summaryDownPaymentRatio">30</span>%</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">贷款年限</span>
+                <span class="result-value"><span id="summaryLoanYears">30</span> 年</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">首付金额</span>
+                <span class="result-value">¥<span id="summaryDownPaymentAmount">60</span> 万元</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label" id="summaryMiscLabel">装修及其它杂费</span>
+                <span class="result-value">¥<span id="summaryMisc">6</span> 万元</span>
+            </div>
+            <div style="border: 2px solid #e0e0e0; border-radius: 12px; padding: 12px; margin-top: 8px;">
+                <div class="result-row">
+                    <span class="result-label" style="font-weight: bold; font-size: 16px;">一次性支出费用</span>
+                    <span class="result-value" style="font-size: 22px; font-weight: bold;">¥<span id="summaryOneTimeExpense">65</span> 万</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">公积金存款支出</span>
+                    <span class="result-value">¥<span id="summaryFundDeposit">12.2</span> 万</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">首次现金支出</span>
+                    <span class="result-value">¥<span id="summaryCashPayment">55</span> 万元</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">月供明细</div>
+            <table class="monthly-table" id="monthlyPaymentTable">
+                <thead>
+                    <tr>
+                        <th>年份</th>
+                        <th>平均月供（元）</th>
+                        <th>每月多支出费用</th>
+                    </tr>
+                </thead>
+                <tbody id="monthlyPaymentBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const repaymentType = {
+            EQUAL_PRINCIPAL: 'equalPrincipal',
+            EQUAL_INSTALLMENT: 'equalInstallment'
+        };
+
+        let currentRepaymentType = repaymentType.EQUAL_INSTALLMENT;
+
+        document.getElementById('newHouseBtn').addEventListener('click', function() {
+            document.getElementById('newHouseBtn').classList.add('active');
+            document.getElementById('secondHouseBtn').classList.remove('active');
+            document.getElementById('newHouseFees').style.display = 'block';
+            document.getElementById('secondHouseFees').style.display = 'none';
+            calculateAll();
+        });
+
+        document.getElementById('secondHouseBtn').addEventListener('click', function() {
+            document.getElementById('secondHouseBtn').classList.add('active');
+            document.getElementById('newHouseBtn').classList.remove('active');
+            document.getElementById('secondHouseFees').style.display = 'block';
+            document.getElementById('newHouseFees').style.display = 'none';
+            calculateAll();
+        });
+
+        document.getElementById('equalPrincipalBtn').addEventListener('click', function() {
+            currentRepaymentType = repaymentType.EQUAL_PRINCIPAL;
+            document.getElementById('equalPrincipalBtn').classList.add('active');
+            document.getElementById('equalInstallmentBtn').classList.remove('active');
+            calculateAll();
+        });
+
+        document.getElementById('equalInstallmentBtn').addEventListener('click', function() {
+            currentRepaymentType = repaymentType.EQUAL_INSTALLMENT;
+            document.getElementById('equalInstallmentBtn').classList.add('active');
+            document.getElementById('equalPrincipalBtn').classList.remove('active');
+            calculateAll();
+        });
+
+        const inputFields = [
+            'houseTotalPrice', 'houseArea', 'houseUnitPrice',
+            'downPaymentRatio', 'downPaymentAmount', 'loanYears',
+            'fundRate', 'commercialRate', 'fundLoanAmount',
+            'newHouseMisc', 'agencyFeeRate', 'valuationFeeRate',
+            'fundDeposit', 'personalFund', 'monthlyRent', 'miscellaneousFee', 'renovationFee'
+        ];
+
+        inputFields.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener('blur', calculateAll);
+                element.addEventListener('change', calculateAll);
+            }
+        });
+
+        function calculateAll() {
+            const houseTotalPrice = parseFloat(document.getElementById('houseTotalPrice').value) || 0;
+            const houseArea = parseFloat(document.getElementById('houseArea').value) || 0;
+            const downPaymentRatio = parseFloat(document.getElementById('downPaymentRatio').value) || 0;
+            const downPaymentAmount = parseFloat(document.getElementById('downPaymentAmount').value) || 0;
+            const loanYears = parseFloat(document.getElementById('loanYears').value) || 30;
+            const fundRate = parseFloat(document.getElementById('fundRate').value) || 2.6;
+            const commercialRate = parseFloat(document.getElementById('commercialRate').value) || 3.5;
+            const fundLoanAmount = parseFloat(document.getElementById('fundLoanAmount').value) || 96;
+            const newHouseMisc = parseFloat(document.getElementById('newHouseMisc').value) || 0;
+            const agencyFeeRate = parseFloat(document.getElementById('agencyFeeRate').value) || 0;
+            const valuationFeeRate = parseFloat(document.getElementById('valuationFeeRate').value) || 0;
+            const fundDeposit = parseFloat(document.getElementById('fundDeposit').value) || 0;
+            const personalFund = parseFloat(document.getElementById('personalFund').value) || 0;
+            const monthlyRent = parseFloat(document.getElementById('monthlyRent').value) || 0;
+            const miscellaneousFee = parseFloat(document.getElementById('miscellaneousFee').value) || 0;
+            const renovationFee = parseFloat(document.getElementById('renovationFee').value) || 0;
+
+            const isNewHouse = document.getElementById('newHouseBtn').classList.contains('active');
+
+            let unitPrice = houseArea > 0 ? (houseTotalPrice * 10000 / houseArea).toFixed(0) : 0;
+            document.getElementById('houseUnitPrice').value = unitPrice;
+
+            let calcDownPaymentAmount, calcDownPaymentRatio;
+            if (document.activeElement.id === 'downPaymentRatio') {
+                calcDownPaymentAmount = (houseTotalPrice * downPaymentRatio / 100).toFixed(2);
+                document.getElementById('downPaymentAmount').value = parseFloat(calcDownPaymentAmount);
+            } else if (document.activeElement.id === 'downPaymentAmount') {
+                calcDownPaymentRatio = houseTotalPrice > 0 ? (downPaymentAmount / houseTotalPrice * 100).toFixed(1) : 0;
+                document.getElementById('downPaymentRatio').value = parseFloat(calcDownPaymentRatio);
+            }
+
+            const loanAmount = Math.max(0, houseTotalPrice - downPaymentAmount);
+            const commercialLoanAmount = Math.max(0, loanAmount - fundLoanAmount);
+            document.getElementById('commercialLoanInput').value = commercialLoanAmount.toFixed(2);
+            document.getElementById('requiredLoanAmount').textContent = loanAmount.toFixed(2);
+
+            const deedTaxRate = houseArea <= 140 ? 1 : 1.5;
+            document.getElementById('deedTaxRate').textContent = deedTaxRate;
+            const deedTaxAmount = (houseTotalPrice * deedTaxRate / 100).toFixed(2);
+            document.getElementById('deedTaxAmount').textContent = deedTaxAmount;
+
+            const newHouseTotalFee = (parseFloat(newHouseMisc) + parseFloat(deedTaxAmount)).toFixed(2);
+            document.getElementById('newHouseTotalFee').textContent = newHouseTotalFee;
+
+            const incomeTaxRate = houseArea <= 140 ? 1 : 1.5;
+            document.getElementById('incomeTaxRate').textContent = incomeTaxRate;
+            const incomeTaxAmount = (houseTotalPrice * incomeTaxRate / 100).toFixed(2);
+            document.getElementById('incomeTaxAmount').textContent = incomeTaxAmount;
+
+            const agencyFee = (houseTotalPrice * agencyFeeRate / 100).toFixed(2);
+            document.getElementById('agencyFee').textContent = agencyFee;
+
+            const valuationFeeAmount = (houseTotalPrice * valuationFeeRate / 100).toFixed(2);
+            document.getElementById('valuationFeeAmount').textContent = valuationFeeAmount;
+
+            const secondHouseTotalFee = (parseFloat(incomeTaxAmount) + parseFloat(agencyFee) + parseFloat(valuationFeeAmount) + renovationFee + miscellaneousFee / 10000).toFixed(2);
+            document.getElementById('secondHouseTotalFee').textContent = secondHouseTotalFee;
+
+            const oneTimeExpense = (downPaymentAmount * 10000) + ((isNewHouse ? parseFloat(newHouseTotalFee) : parseFloat(secondHouseTotalFee)) * 10000);
+            document.getElementById('oneTimeExpense').textContent = Math.round(oneTimeExpense);
+
+            const cashPayment = Math.max(0, oneTimeExpense - fundDeposit);
+            document.getElementById('cashPayment').textContent = Math.round(cashPayment);
+
+            const fundPlusRent = personalFund + monthlyRent;
+            document.getElementById('fundPlusRent').textContent = fundPlusRent;
+
+            document.getElementById('summaryHouseTotal').textContent = houseTotalPrice;
+            document.getElementById('summaryDownPaymentRatio').textContent = downPaymentRatio;
+            document.getElementById('summaryDownPaymentAmount').textContent = downPaymentAmount;
+            document.getElementById('summaryLoanYears').textContent = loanYears;
+            document.getElementById('summaryMiscLabel').textContent = isNewHouse ? '新房额外费用小计' : '二手房额外费用小计';
+            document.getElementById('summaryMisc').textContent = isNewHouse ? newHouseTotalFee : secondHouseTotalFee;
+            document.getElementById('summaryOneTimeExpense').textContent = (oneTimeExpense / 10000).toFixed(2);
+            document.getElementById('summaryCashPayment').textContent = (cashPayment / 10000).toFixed(1);
+            document.getElementById('summaryFundDeposit').textContent = (fundDeposit / 10000).toFixed(2);
+
+            calculateInterest(fundLoanAmount, commercialLoanAmount, fundRate, commercialRate, loanYears);
+            calculateMonthlyPayments(fundLoanAmount, commercialLoanAmount, fundRate, commercialRate, loanYears, fundPlusRent);
+        }
+
+        function calculateInterest(fundLoanAmount, commercialLoanAmount, fundRate, commercialRate, loanYears) {
+            const fundLoan = fundLoanAmount * 10000;
+            const commercialLoan = commercialLoanAmount * 10000;
+            const months = loanYears * 12;
+            const fundMonthlyRate = fundRate / 100 / 12;
+            const commercialMonthlyRate = commercialRate / 100 / 12;
+
+            let fundInterestEI = 0, commercialInterestEI = 0;
+            let fundInterestEP = 0, commercialInterestEP = 0;
+
+            if (fundLoan > 0 && months > 0) {
+                const fundPaymentEI = fundLoan * fundMonthlyRate * Math.pow(1 + fundMonthlyRate, months) / (Math.pow(1 + fundMonthlyRate, months) - 1);
+                fundInterestEI = fundPaymentEI * months - fundLoan;
+
+                const fundPrincipalPerMonth = fundLoan / months;
+                for (let month = 0; month < months; month++) {
+                    fundInterestEP += (fundLoan - fundPrincipalPerMonth * month) * fundMonthlyRate;
+                }
+            }
+
+            if (commercialLoan > 0 && months > 0) {
+                const commercialPaymentEI = commercialLoan * commercialMonthlyRate * Math.pow(1 + commercialMonthlyRate, months) / (Math.pow(1 + commercialMonthlyRate, months) - 1);
+                commercialInterestEI = commercialPaymentEI * months - commercialLoan;
+
+                const commercialPrincipalPerMonth = commercialLoan / months;
+                for (let month = 0; month < months; month++) {
+                    commercialInterestEP += (commercialLoan - commercialPrincipalPerMonth * month) * commercialMonthlyRate;
+                }
+            }
+
+            const totalInterestEI = (fundInterestEI + commercialInterestEI) / 10000;
+            const totalInterestEP = (fundInterestEP + commercialInterestEP) / 10000;
+
+            const totalInterest = currentRepaymentType === repaymentType.EQUAL_INSTALLMENT ? totalInterestEI : totalInterestEP;
+            const interestDiff = totalInterestEI - totalInterestEP;
+
+            document.getElementById('totalInterest').textContent = totalInterest.toFixed(2);
+            document.getElementById('interestDiff').textContent = interestDiff.toFixed(2);
+        }
+
+        function calculateMonthlyPayments(fundLoanAmount, commercialLoanAmount, fundRate, commercialRate, loanYears, fundPlusRent) {
+            const fundLoan = fundLoanAmount * 10000;
+            const commercialLoan = commercialLoanAmount * 10000;
+            const totalLoan = fundLoan + commercialLoan;
+            const months = loanYears * 12;
+            const fundMonthlyRate = fundRate / 100 / 12;
+            const commercialMonthlyRate = commercialRate / 100 / 12;
+
+            let monthlyPayments = [];
+
+            if (currentRepaymentType === repaymentType.EQUAL_INSTALLMENT) {
+                let fundPayment = 0, commercialPayment = 0;
+                
+                if (fundLoan > 0 && months > 0) {
+                    fundPayment = fundLoan * fundMonthlyRate * Math.pow(1 + fundMonthlyRate, months) / (Math.pow(1 + fundMonthlyRate, months) - 1);
+                }
+                if (commercialLoan > 0 && months > 0) {
+                    commercialPayment = commercialLoan * commercialMonthlyRate * Math.pow(1 + commercialMonthlyRate, months) / (Math.pow(1 + commercialMonthlyRate, months) - 1);
+                }
+                
+                const monthlyPayment = fundPayment + commercialPayment;
+                
+                for (let i = 0; i < loanYears; i++) {
+                    monthlyPayments.push({
+                        year: i + 1,
+                        payment: Math.round(monthlyPayment),
+                        diff: Math.round(monthlyPayment) - fundPlusRent
+                    });
+                }
+            } else {
+                const fundPrincipalPerMonth = fundLoan > 0 ? fundLoan / months : 0;
+                const commercialPrincipalPerMonth = commercialLoan > 0 ? commercialLoan / months : 0;
+                
+                for (let year = 1; year <= loanYears; year++) {
+                    let totalPayment = 0;
+                    for (let month = (year - 1) * 12; month < year * 12 && month < months; month++) {
+                        const fundInterest = (fundLoan - fundPrincipalPerMonth * month) * fundMonthlyRate;
+                        const commercialInterest = (commercialLoan - commercialPrincipalPerMonth * month) * commercialMonthlyRate;
+                        totalPayment += fundPrincipalPerMonth + fundInterest + commercialPrincipalPerMonth + commercialInterest;
+                    }
+                    const avgPayment = Math.round(totalPayment / 12);
+                    monthlyPayments.push({
+                        year: year,
+                        payment: avgPayment,
+                        diff: avgPayment - fundPlusRent
+                    });
+                }
+            }
+
+            renderMonthlyPaymentTable(monthlyPayments);
+        }
+
+        function renderMonthlyPaymentTable(payments) {
+            const tbody = document.getElementById('monthlyPaymentBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            payments.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>第${item.year}年</td>
+                    <td>¥${item.payment.toLocaleString()}</td>
+                    <td>${item.diff > 0 ? '+' : ''}${item.diff.toLocaleString()}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', calculateAll);
+    </script>
+</body>
+</html>
