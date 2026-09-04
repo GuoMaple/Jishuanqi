@@ -119,6 +119,11 @@
             font-size: 12px;
             transition: border-color 0.3s;
         }
+        .form-item-horizontal input[readonly] {
+            background-color: #f5f7fa;
+            color: #606266;
+            cursor: not-allowed;
+        }
         .form-item label {
             display: block;
             font-size: 13px;
@@ -215,6 +220,14 @@
         .monthly-table td:first-child, .monthly-table th:first-child {
             text-align: left;
         }
+        @media (max-width: 600px) {
+            .form-row-horizontal {
+                flex-wrap: wrap;
+            }
+            .form-item-horizontal {
+                flex: 1 1 140px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -226,8 +239,8 @@
             <div class="switch-group">
                 <span>房屋类型：</span>
                 <div class="switch-btn" id="houseTypeSwitch">
-                    <button id="newHouseBtn" class="active">新房</button>
-                    <button id="secondHouseBtn">二手房</button>
+                    <button type="button" id="newHouseBtn" class="active">新房</button>
+                    <button type="button" id="secondHouseBtn">二手房</button>
                 </div>
             </div>
             <div class="form-row-horizontal">
@@ -246,7 +259,7 @@
                 <div class="form-item-horizontal">
                     <label>房屋单价（元/㎡）</label>
                     <div class="input-group">
-                        <input type="number" id="houseUnitPrice" value="20000" min="0" step="100">
+                        <input type="number" id="houseUnitPrice" value="20000" min="0" step="100" readonly>
                     </div>
                 </div>
             </div>
@@ -260,8 +273,8 @@
             <div class="switch-group">
                 <span>还款方式：</span>
                 <div class="switch-btn" id="repaymentTypeSwitch">
-                    <button id="equalPrincipalBtn">等额本金</button>
-                    <button id="equalInstallmentBtn" class="active">等额本息</button>
+                    <button type="button" id="equalPrincipalBtn">等额本金</button>
+                    <button type="button" id="equalInstallmentBtn" class="active">等额本息</button>
                 </div>
                 <span id="repaymentDiff" style="margin-left: 12px; font-size: 12px; color: #666;"></span>
             </div>
@@ -275,7 +288,7 @@
                 <div class="form-item-horizontal">
                     <label>首付金额（万）</label>
                     <div class="input-group">
-                        <input type="number" id="downPaymentAmount" value="60" min="0" step="1">
+                        <input type="number" id="downPaymentAmount" value="72" min="0" step="1">
                     </div>
                 </div>
                 <div class="form-item-horizontal">
@@ -554,56 +567,93 @@
         });
 
         const inputFields = [
-            'houseTotalPrice', 'houseArea', 'houseUnitPrice',
-            'downPaymentRatio', 'downPaymentAmount', 'loanYears',
-            'fundRate', 'commercialRate', 'fundLoanAmount',
-            'newHouseMisc', 'agencyFeeRate', 'valuationFeeRate',
-            'fundDeposit', 'personalFund', 'monthlyRent', 'miscellaneousFee', 'renovationFee'
+            'houseTotalPrice', 'houseArea', 'downPaymentRatio',
+            'downPaymentAmount', 'loanYears', 'fundRate',
+            'commercialRate', 'fundLoanAmount', 'newHouseMisc',
+            'agencyFeeRate', 'valuationFeeRate', 'fundDeposit',
+            'personalFund', 'monthlyRent', 'miscellaneousFee', 'renovationFee'
         ];
+
+        let downPaymentSource = 'ratio';
 
         inputFields.forEach(id => {
             const element = document.getElementById(id);
-            if (element) {
-                element.addEventListener('blur', calculateAll);
-                element.addEventListener('change', calculateAll);
-            }
+            if (!element) return;
+
+            element.addEventListener('change', function() {
+                if (id === 'downPaymentRatio') downPaymentSource = 'ratio';
+                if (id === 'downPaymentAmount') downPaymentSource = 'amount';
+                calculateAll();
+            });
         });
 
+        function getNumber(id, fallback = 0) {
+            const value = Number.parseFloat(document.getElementById(id).value);
+            return Number.isFinite(value) ? value : fallback;
+        }
+
+        function clamp(value, min, max) {
+            return Math.min(max, Math.max(min, value));
+        }
+
+        function setInputValue(id, value, digits = null) {
+            const normalized = digits === null ? value : Number(value.toFixed(digits));
+            document.getElementById(id).value = normalized;
+        }
+
+        function getEqualInstallmentPayment(principal, monthlyRate, months) {
+            if (principal <= 0 || months <= 0) return 0;
+            if (monthlyRate === 0) return principal / months;
+
+            const factor = Math.pow(1 + monthlyRate, months);
+            return principal * monthlyRate * factor / (factor - 1);
+        }
+
+        function getEqualPrincipalInterest(principal, monthlyRate, months) {
+            if (principal <= 0 || monthlyRate === 0 || months <= 0) return 0;
+            return principal * monthlyRate * (months + 1) / 2;
+        }
+
         function calculateAll() {
-            const houseTotalPrice = parseFloat(document.getElementById('houseTotalPrice').value) || 0;
-            const houseArea = parseFloat(document.getElementById('houseArea').value) || 0;
-            const downPaymentRatio = parseFloat(document.getElementById('downPaymentRatio').value) || 0;
-            const downPaymentAmount = parseFloat(document.getElementById('downPaymentAmount').value) || 0;
-            const loanYears = parseFloat(document.getElementById('loanYears').value) || 30;
-            const fundRate = parseFloat(document.getElementById('fundRate').value) || 2.6;
-            const commercialRate = parseFloat(document.getElementById('commercialRate').value) || 3.5;
-            const fundLoanAmount = parseFloat(document.getElementById('fundLoanAmount').value) || 96;
-            const newHouseMisc = parseFloat(document.getElementById('newHouseMisc').value) || 0;
-            const agencyFeeRate = parseFloat(document.getElementById('agencyFeeRate').value) || 0;
-            const valuationFeeRate = parseFloat(document.getElementById('valuationFeeRate').value) || 0;
-            const fundDeposit = parseFloat(document.getElementById('fundDeposit').value) || 0;
-            const personalFund = parseFloat(document.getElementById('personalFund').value) || 0;
-            const monthlyRent = parseFloat(document.getElementById('monthlyRent').value) || 0;
-            const miscellaneousFee = parseFloat(document.getElementById('miscellaneousFee').value) || 0;
-            const renovationFee = parseFloat(document.getElementById('renovationFee').value) || 0;
+            const houseTotalPrice = Math.max(0, getNumber('houseTotalPrice'));
+            const houseArea = Math.max(0, getNumber('houseArea'));
+            const loanYears = clamp(Math.round(getNumber('loanYears', 30)), 1, 30);
+            const fundRate = Math.max(0, getNumber('fundRate', 2.6));
+            const commercialRate = Math.max(0, getNumber('commercialRate', 3.5));
+            const newHouseMisc = Math.max(0, getNumber('newHouseMisc'));
+            const agencyFeeRate = Math.max(0, getNumber('agencyFeeRate'));
+            const valuationFeeRate = Math.max(0, getNumber('valuationFeeRate'));
+            const fundDeposit = Math.max(0, getNumber('fundDeposit'));
+            const personalFund = Math.max(0, getNumber('personalFund'));
+            const monthlyRent = Math.max(0, getNumber('monthlyRent'));
+            const miscellaneousFee = Math.max(0, getNumber('miscellaneousFee'));
+            const renovationFee = Math.max(0, getNumber('renovationFee'));
 
             const isNewHouse = document.getElementById('newHouseBtn').classList.contains('active');
 
-            let unitPrice = houseArea > 0 ? (houseTotalPrice * 10000 / houseArea).toFixed(0) : 0;
-            document.getElementById('houseUnitPrice').value = unitPrice;
+            const unitPrice = houseArea > 0 ? houseTotalPrice * 10000 / houseArea : 0;
+            setInputValue('houseUnitPrice', unitPrice, 0);
+            setInputValue('loanYears', loanYears);
 
-            let calcDownPaymentAmount, calcDownPaymentRatio;
-            if (document.activeElement.id === 'downPaymentRatio') {
-                calcDownPaymentAmount = (houseTotalPrice * downPaymentRatio / 100).toFixed(2);
-                document.getElementById('downPaymentAmount').value = parseFloat(calcDownPaymentAmount);
-            } else if (document.activeElement.id === 'downPaymentAmount') {
-                calcDownPaymentRatio = houseTotalPrice > 0 ? (downPaymentAmount / houseTotalPrice * 100).toFixed(1) : 0;
-                document.getElementById('downPaymentRatio').value = parseFloat(calcDownPaymentRatio);
+            let downPaymentRatio = clamp(getNumber('downPaymentRatio'), 0, 100);
+            let downPaymentAmount = clamp(getNumber('downPaymentAmount'), 0, houseTotalPrice);
+
+            if (downPaymentSource === 'amount') {
+                downPaymentRatio = houseTotalPrice > 0 ? downPaymentAmount / houseTotalPrice * 100 : 0;
+                setInputValue('downPaymentRatio', downPaymentRatio, 1);
+            } else {
+                downPaymentAmount = houseTotalPrice * downPaymentRatio / 100;
+                setInputValue('downPaymentAmount', downPaymentAmount, 2);
             }
 
             const loanAmount = Math.max(0, houseTotalPrice - downPaymentAmount);
+            const requestedFundLoanAmount = Math.max(0, getNumber('fundLoanAmount'));
+            const fundLoanAmount = Math.min(requestedFundLoanAmount, loanAmount);
             const commercialLoanAmount = Math.max(0, loanAmount - fundLoanAmount);
-            document.getElementById('commercialLoanInput').value = commercialLoanAmount.toFixed(2);
+
+            setInputValue('fundLoanAmount', fundLoanAmount, 2);
+            document.getElementById('fundLoanAmount').max = loanAmount.toFixed(2);
+            setInputValue('commercialLoanInput', commercialLoanAmount, 2);
             document.getElementById('requiredLoanAmount').textContent = loanAmount.toFixed(2);
 
             const deedTaxRate = houseArea <= 140 ? 1 : 1.5;
@@ -611,7 +661,7 @@
             const deedTaxAmount = (houseTotalPrice * deedTaxRate / 100).toFixed(2);
             document.getElementById('deedTaxAmount').textContent = deedTaxAmount;
 
-            const newHouseTotalFee = (parseFloat(newHouseMisc) + parseFloat(deedTaxAmount)).toFixed(2);
+            const newHouseTotalFee = (newHouseMisc + Number(deedTaxAmount)).toFixed(2);
             document.getElementById('newHouseTotalFee').textContent = newHouseTotalFee;
 
             const incomeTaxRate = houseArea <= 140 ? 1 : 1.5;
@@ -625,10 +675,11 @@
             const valuationFeeAmount = (houseTotalPrice * valuationFeeRate / 100).toFixed(2);
             document.getElementById('valuationFeeAmount').textContent = valuationFeeAmount;
 
-            const secondHouseTotalFee = (parseFloat(incomeTaxAmount) + parseFloat(agencyFee) + parseFloat(valuationFeeAmount) + renovationFee + miscellaneousFee / 10000).toFixed(2);
+            const secondHouseTotalFee = (Number(incomeTaxAmount) + Number(agencyFee) + Number(valuationFeeAmount) + renovationFee + miscellaneousFee / 10000).toFixed(2);
             document.getElementById('secondHouseTotalFee').textContent = secondHouseTotalFee;
 
-            const oneTimeExpense = (downPaymentAmount * 10000) + ((isNewHouse ? parseFloat(newHouseTotalFee) : parseFloat(secondHouseTotalFee)) * 10000);
+            const extraFee = Number(isNewHouse ? newHouseTotalFee : secondHouseTotalFee);
+            const oneTimeExpense = (downPaymentAmount + extraFee) * 10000;
             document.getElementById('oneTimeExpense').textContent = Math.round(oneTimeExpense);
 
             const cashPayment = Math.max(0, oneTimeExpense - fundDeposit);
@@ -637,9 +688,9 @@
             const fundPlusRent = personalFund + monthlyRent;
             document.getElementById('fundPlusRent').textContent = fundPlusRent;
 
-            document.getElementById('summaryHouseTotal').textContent = houseTotalPrice;
-            document.getElementById('summaryDownPaymentRatio').textContent = downPaymentRatio;
-            document.getElementById('summaryDownPaymentAmount').textContent = downPaymentAmount;
+            document.getElementById('summaryHouseTotal').textContent = houseTotalPrice.toFixed(2);
+            document.getElementById('summaryDownPaymentRatio').textContent = downPaymentRatio.toFixed(1);
+            document.getElementById('summaryDownPaymentAmount').textContent = downPaymentAmount.toFixed(2);
             document.getElementById('summaryLoanYears').textContent = loanYears;
             document.getElementById('summaryMiscLabel').textContent = isNewHouse ? '新房额外费用小计' : '二手房额外费用小计';
             document.getElementById('summaryMisc').textContent = isNewHouse ? newHouseTotalFee : secondHouseTotalFee;
@@ -658,28 +709,12 @@
             const fundMonthlyRate = fundRate / 100 / 12;
             const commercialMonthlyRate = commercialRate / 100 / 12;
 
-            let fundInterestEI = 0, commercialInterestEI = 0;
-            let fundInterestEP = 0, commercialInterestEP = 0;
-
-            if (fundLoan > 0 && months > 0) {
-                const fundPaymentEI = fundLoan * fundMonthlyRate * Math.pow(1 + fundMonthlyRate, months) / (Math.pow(1 + fundMonthlyRate, months) - 1);
-                fundInterestEI = fundPaymentEI * months - fundLoan;
-
-                const fundPrincipalPerMonth = fundLoan / months;
-                for (let month = 0; month < months; month++) {
-                    fundInterestEP += (fundLoan - fundPrincipalPerMonth * month) * fundMonthlyRate;
-                }
-            }
-
-            if (commercialLoan > 0 && months > 0) {
-                const commercialPaymentEI = commercialLoan * commercialMonthlyRate * Math.pow(1 + commercialMonthlyRate, months) / (Math.pow(1 + commercialMonthlyRate, months) - 1);
-                commercialInterestEI = commercialPaymentEI * months - commercialLoan;
-
-                const commercialPrincipalPerMonth = commercialLoan / months;
-                for (let month = 0; month < months; month++) {
-                    commercialInterestEP += (commercialLoan - commercialPrincipalPerMonth * month) * commercialMonthlyRate;
-                }
-            }
+            const fundPaymentEI = getEqualInstallmentPayment(fundLoan, fundMonthlyRate, months);
+            const commercialPaymentEI = getEqualInstallmentPayment(commercialLoan, commercialMonthlyRate, months);
+            const fundInterestEI = fundPaymentEI * months - fundLoan;
+            const commercialInterestEI = commercialPaymentEI * months - commercialLoan;
+            const fundInterestEP = getEqualPrincipalInterest(fundLoan, fundMonthlyRate, months);
+            const commercialInterestEP = getEqualPrincipalInterest(commercialLoan, commercialMonthlyRate, months);
 
             const totalInterestEI = (fundInterestEI + commercialInterestEI) / 10000;
             const totalInterestEP = (fundInterestEP + commercialInterestEP) / 10000;
@@ -689,12 +724,12 @@
 
             document.getElementById('totalInterest').textContent = totalInterest.toFixed(2);
             document.getElementById('interestDiff').textContent = interestDiff.toFixed(2);
+            document.getElementById('repaymentDiff').textContent = `等额本息总利息多 ¥${interestDiff.toFixed(2)} 万`;
         }
 
         function calculateMonthlyPayments(fundLoanAmount, commercialLoanAmount, fundRate, commercialRate, loanYears, fundPlusRent) {
             const fundLoan = fundLoanAmount * 10000;
             const commercialLoan = commercialLoanAmount * 10000;
-            const totalLoan = fundLoan + commercialLoan;
             const months = loanYears * 12;
             const fundMonthlyRate = fundRate / 100 / 12;
             const commercialMonthlyRate = commercialRate / 100 / 12;
@@ -704,12 +739,8 @@
             if (currentRepaymentType === repaymentType.EQUAL_INSTALLMENT) {
                 let fundPayment = 0, commercialPayment = 0;
                 
-                if (fundLoan > 0 && months > 0) {
-                    fundPayment = fundLoan * fundMonthlyRate * Math.pow(1 + fundMonthlyRate, months) / (Math.pow(1 + fundMonthlyRate, months) - 1);
-                }
-                if (commercialLoan > 0 && months > 0) {
-                    commercialPayment = commercialLoan * commercialMonthlyRate * Math.pow(1 + commercialMonthlyRate, months) / (Math.pow(1 + commercialMonthlyRate, months) - 1);
-                }
+                fundPayment = getEqualInstallmentPayment(fundLoan, fundMonthlyRate, months);
+                commercialPayment = getEqualInstallmentPayment(commercialLoan, commercialMonthlyRate, months);
                 
                 const monthlyPayment = fundPayment + commercialPayment;
                 
